@@ -6,9 +6,10 @@ import android.net.Uri
 import android.provider.Settings
 
 object PermissionSettingsOpener {
-    fun getSettingIntent(context: Context): Intent {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        intent.data = Uri.fromParts("package", context.packageName, null)
-        return intent
+    fun startSettingActivity(context: Context) {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+        }
+        context.startActivity(intent)
     }
 }

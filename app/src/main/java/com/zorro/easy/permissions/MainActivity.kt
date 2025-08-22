@@ -21,16 +21,22 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         findViewById<Button>(R.id.button_view).setOnClickListener {
-            PermissionRequester.from(
-                this,
-                PermissionGroup.PHONE, PermissionGroup.LOCATION,
-                PermissionGroup.SMS, PermissionGroup.NOTIFICATIONS,
-                PermissionGroup.CAMERA, PermissionGroup.APPS
-            ).onDenied {
-                Toast.makeText(this, "$it", Toast.LENGTH_SHORT).show()
-            }.onGranted {
-                Toast.makeText(this, "成功", Toast.LENGTH_SHORT).show()
-            }.request()
+            PermissionRequester.from(this)
+                .permissions(
+                    PermissionGroup.PHONE, PermissionGroup.LOCATION,
+                    PermissionGroup.SMS, PermissionGroup.NOTIFICATIONS,
+                    PermissionGroup.CAMERA, PermissionGroup.APPS
+                ).request { result ->
+                    when (result) {
+                        is PermissionResult.Success -> {
+                            Toast.makeText(this, "成功", Toast.LENGTH_SHORT).show()
+                        }
+
+                        is PermissionResult.Partial -> {
+                            Toast.makeText(this, "${result.denied}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
         }
     }
 }
