@@ -2,22 +2,25 @@ package com.zorro.easy.permissions
 
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import androidx.lifecycle.repeatOnLifecycle
+import com.zorro.easy.permissions.constant.Constants
+import kotlinx.coroutines.launch
+
 
 /**
  * 无 UI 的 Host Fragment：承载权限申请逻辑。
  *
  * 使用时通过 arguments 传入:
- * - ARG_REQUEST_KEY (String)
- * - ARG_PERMS (StringArray)
+ * - Constants.FRAGMENT_ARG_REQUEST_KEY (String)
+ * - Constants.FRAGMENT_ARG_PERMS (StringArray)
  *
  * Fragment 会向 caller 通过 FragmentResult 发送结果（使用 requestKey）。
  *
@@ -26,13 +29,15 @@ import kotlinx.coroutines.flow.onEach
  * - 不使用 ActivityResult 来打开设置页（startActivity），返回时 onResume 检查
  * - DialogFragment 使用 Manager + tag 来避免重复添加
  */
-class PermissionHostFragment : Fragment(), PermissionDeniedDialogFragment.Callback {
+class PermissionHostFragment : Fragment() {
 
     private val vm: PermissionViewModel by viewModels()
 
-    private val requestKey: String by lazy { requireArguments().getString(ARG_REQUEST_KEY) ?: "" }
+    private val requestKey: String by lazy {
+        arguments?.getString(Constants.FRAGMENT_ARG_REQUEST_KEY) ?: ""
+    }
     private val allPerms: List<String> by lazy {
-        requireArguments().getStringArray(ARG_PERMS)?.toList().orEmpty()
+        arguments?.getStringArray(Constants.FRAGMENT_ARG_PERMS)?.toList().orEmpty()
     }
 
     // launcher 用于系统权限弹框阶段
@@ -41,15 +46,13 @@ class PermissionHostFragment : Fragment(), PermissionDeniedDialogFragment.Callba
             // 处理结果: 计算 granted / denied / permanentlyDenied
             val granted = result.filterValues { it }.keys.toList()
             val denied = result.filterValues { !it }.keys.toList()
-
             // permanentlyDenied detection requires shouldShowRequestPermissionRationale
             val permanentlyDenied = denied.filter { perm ->
                 // If shouldShowRequestPermissionRationale == false and permission still denied -> likely permanently denied.
                 // Note: On first request, shouldShowRequestPermissionRationale might be false; caller UX should handle explanations before.
                 !shouldShowRequestPermissionRationale(perm)
             }
-
-            vm.onSystemResult(granted, denied, permanentlyDenied)
+            vm.onActivityResult(granted, denied, permanentlyDenied)
         }
 
     @Suppress("DEPRECATION")
@@ -57,92 +60,115 @@ class PermissionHostFragment : Fragment(), PermissionDeniedDialogFragment.Callba
         super.onCreate(savedInstanceState)
         // keep no UI
         retainInstance = false
-        setStyleNoUi()
         subscribeToVm()
         // Start when fragment first created if state not started
-        if (savedInstanceState == null) {
-            // version filter
-            val supported = filterSupportedPermissions(requireContext(), allPerms).distinct()
-            vm.start(requestKey, allPerms, supported)
-        }
+//        if (savedInstanceState == null) {
+        // version filter
+        val supported = filterSupportedPermissions(requireContext(), allPerms).distinct()
+        vm.start(requestKey, allPerms, supported)
+//        }
     }
 
     private fun subscribeToVm() {
-        vm.state.onEach { st ->
-            // when state indicates toRequest and not yet launched => launch
-            if (!st.launched && st.toRequest.isNotEmpty()) {
-                // launch system permission request
-                permissionLauncher.launch(st.toRequest.toTypedArray())
-                vm.markLaunched()
-            }
-            // If VM says waitingSettingsReturn etc, we handle in onResume
-            // If VM has permanentlyDenied saved, ensure dialog visible (handled in effect)
-        }.launchIn(lifecycleScope)
-
-        vm.effect.onEach { eff ->
-            when (eff) {
-                is Effect.LaunchSystemRequest -> {
-                    // handled by state subscriber above
-                }
-
-                is Effect.ShowSettingsDialog -> {
-                    // show dialog (use parentFragmentManager) with unique tag
-                    PermissionDeniedDialogFragment.show(
-                        parentFragmentManager,
-                        requestKey,
-                        eff.perms
-                    )
-                }
-
-                is Effect.Completed -> {
-                    // Completed -> send FragmentResult back to caller and remove self
-                    val bundle = when (val r = eff.result) {
-                        is PermissionResult.Success -> Bundle().apply {
-                            putBoolean("granted", true)
-                            putStringArrayList("granted_list", ArrayList(r.granted))
-                            putStringArrayList("denied_list", ArrayList())
-                        }
-
-                        is PermissionResult.Partial -> Bundle().apply {
-                            putBoolean("granted", false)
-                            putStringArrayList("granted_list", ArrayList(r.granted))
-                            putStringArrayList("denied_list", ArrayList(r.denied))
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    vm.permissionUiState.collect { st ->
+                        // 处理 state
+                        if (!st.launched && st.requestPermissions.isNotEmpty()) {
+                            // launch system permission request
+                            permissionLauncher.launch(st.requestPermissions.toTypedArray())
+                            vm.markLaunched()
                         }
                     }
-                    parentFragmentManager.setFragmentResult(requestKey, bundle)
-                    // dismiss possible dialog
-                    val dlgTag = PermissionDeniedDialogFragment::class.java.name + "_" + requestKey
-                    (parentFragmentManager.findFragmentByTag(dlgTag) as? DialogFragment)?.dismissAllowingStateLoss()
-                    // remove self
-                    parentFragmentManager.beginTransaction().remove(this@PermissionHostFragment)
-                        .commitAllowingStateLoss()
                 }
             }
-        }.launchIn(lifecycleScope)
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.effect.collect { eff ->
+                    // 处理 effect
+                    when (eff) {
+                        is Effect.ShowSettingsDialog -> {
+                            // show dialog (use parentFragmentManager) with unique tag
+                            registerListenerFragmentResultListener()
+                            PermissionDeniedDialogFragment.show(
+                                parentFragmentManager,
+                                requestKey,
+                                eff.perms
+                            )
+                        }
+
+                        is Effect.Completed -> {
+                            // Completed -> send FragmentResult back to caller and remove self
+                            val bundle = when (val r = eff.result) {
+                                is PermissionResult.AllGranted -> Bundle().apply {
+                                    putBoolean(Constants.FRAGMENT_RESULT_GRANTED_STATE_KEY, true)
+                                    putStringArrayList(
+                                        Constants.FRAGMENT_RESULT_GRANTED_LIST_KEY,
+                                        ArrayList(r.granted)
+                                    )
+                                    putStringArrayList(
+                                        Constants.FRAGMENT_RESULT_DENIED_LIST_KEY,
+                                        ArrayList()
+                                    )
+                                }
+
+                                is PermissionResult.Partial -> Bundle().apply {
+                                    putBoolean(Constants.FRAGMENT_RESULT_GRANTED_STATE_KEY, false)
+                                    putStringArrayList(
+                                        Constants.FRAGMENT_RESULT_GRANTED_LIST_KEY,
+                                        ArrayList(r.granted)
+                                    )
+                                    putStringArrayList(
+                                        Constants.FRAGMENT_RESULT_DENIED_LIST_KEY,
+                                        ArrayList(r.denied)
+                                    )
+                                }
+                            }
+                            parentFragmentManager.setFragmentResult(requestKey, bundle)
+                            // dismiss possible dialog
+                            val dlgTag = Constants.DIALOG_FRAGMENT_TAG_PREFIX + requestKey
+                            (parentFragmentManager.findFragmentByTag(dlgTag) as? DialogFragment)
+                                ?.dismissAllowingStateLoss()
+                            // remove self
+                            parentFragmentManager.beginTransaction()
+                                .remove(this@PermissionHostFragment)
+                                .commitAllowingStateLoss()
+                        }
+                    }
+                }
+            }
+        }
+
+
     }
 
     override fun onResume() {
         super.onResume()
-        // If we opened settings (vm tells waitingSettingsReturn), or we just resumed after user may have returned,
-        // re-check permissions and let VM handle evaluation.
         vm.onResumeCheck()
     }
 
-    private fun setStyleNoUi() {
-        // Ensure fragment doesn't try to draw UI
-        view?.visibility = View.GONE
+    private fun registerListenerFragmentResultListener() {
+        setFragmentResultListener(Constants.DIALOG_FRAGMENT_REQUEST_KEY) { _, bundle ->
+            val confirmed = bundle.getBoolean(Constants.DIALOG_FRAGMENT_RESULT_KEY)
+            if (confirmed) {
+                onConfirmFromDialog()
+            } else {
+                onCancelFromDialog()
+            }
+        }
     }
 
     // Dialog callbacks
-    override fun onGoToSettings() {
+    private fun onConfirmFromDialog() {
         // mark VM as waiting settings and open settings via startActivity (no ActivityResult)
         vm.openedSettings()
         PermissionSettingsOpener.startSettingActivity(requireContext())
+
     }
 
-    override fun onCancelFromDialog() {
-        // user cancelled the dialog: finish with Partial (denied)
-        // compute current denied / granted
+    private fun onCancelFromDialog() {
         val ctx = requireContext()
         val granted = allPerms.filter {
             ContextCompat.checkSelfPermission(
@@ -155,13 +181,11 @@ class PermissionHostFragment : Fragment(), PermissionDeniedDialogFragment.Callba
     }
 
     companion object {
-        const val ARG_REQUEST_KEY = "arg_request_key"
-        const val ARG_PERMS = "arg_perms"
         fun newInstance(requestKey: String, perms: List<String>): PermissionHostFragment {
             return PermissionHostFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_REQUEST_KEY, requestKey)
-                    putStringArray(ARG_PERMS, perms.toTypedArray())
+                    putString(Constants.FRAGMENT_ARG_REQUEST_KEY, requestKey)
+                    putStringArray(Constants.FRAGMENT_ARG_PERMS, perms.toTypedArray())
                 }
             }
         }

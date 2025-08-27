@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import com.zorro.easy.permissions.constant.Constants
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -18,7 +19,6 @@ class PermissionRequester private constructor(
     private val lifecycleOwnerForListener: Any // Activity or Fragment
 ) {
     private val perms = linkedSetOf<String>()
-    private val tag = "PermissionFragment"
 
     fun permissions(vararg groups: PermissionGroup) = apply {
         groups.forEach { perms.addAll(it.permissions) }
@@ -30,7 +30,7 @@ class PermissionRequester private constructor(
 
     /** callback 方式（DSL） */
     fun request(onResult: (PermissionResult) -> Unit) {
-        val requestKey = "perm_req_" + UUID.randomUUID().toString()
+        val requestKey = UUID.randomUUID().toString()
         // register listener BEFORE adding fragment
         registerListener(requestKey, onResult)
         addHostFragment(requestKey)
@@ -47,7 +47,7 @@ class PermissionRequester private constructor(
 
     /** Flow 方式（单次结果的 Flow） */
     fun asFlow(): Flow<PermissionResult> = callbackFlow {
-        val requestKey = "perm_req_" + UUID.randomUUID().toString()
+        val requestKey = UUID.randomUUID().toString()
         registerListener(requestKey) { res ->
             trySend(res).isSuccess
             close()
@@ -55,20 +55,18 @@ class PermissionRequester private constructor(
         addHostFragment(requestKey)
     }
 
-    private fun registerListener(requestKey: String, cb: (PermissionResult) -> Unit) {
+    private fun registerListener(requestKey: String, callback: (PermissionResult) -> Unit) {
         // Using lifecycle owner: if activity, pass activity; if fragment, pass the fragment
         when (lifecycleOwnerForListener) {
             is FragmentActivity -> {
                 fm.setFragmentResultListener(requestKey, lifecycleOwnerForListener) { _, bundle ->
-                    val result = bundleToPermissionResult(bundle)
-                    cb(result)
+                    callback(bundleToPermissionResult(bundle))
                 }
             }
 
             is Fragment -> {
                 fm.setFragmentResultListener(requestKey, lifecycleOwnerForListener) { _, bundle ->
-                    val result = bundleToPermissionResult(bundle)
-                    cb(result)
+                    callback(bundleToPermissionResult(bundle))
                 }
             }
 
@@ -77,17 +75,19 @@ class PermissionRequester private constructor(
     }
 
     private fun bundleToPermissionResult(bundle: Bundle): PermissionResult {
-        val granted = bundle.getStringArrayList("granted_list") ?: arrayListOf()
-        val denied = bundle.getStringArrayList("denied_list") ?: arrayListOf()
-        val isGranted = bundle.getBoolean("granted", false)
-        return if (isGranted) PermissionResult.Success(granted) else PermissionResult.Partial(
+        val isGranted = bundle.getBoolean(Constants.FRAGMENT_RESULT_GRANTED_STATE_KEY, false)
+        val granted =
+            bundle.getStringArrayList(Constants.FRAGMENT_RESULT_GRANTED_LIST_KEY) ?: arrayListOf()
+        val denied =
+            bundle.getStringArrayList(Constants.FRAGMENT_RESULT_DENIED_LIST_KEY) ?: arrayListOf()
+        return if (isGranted) PermissionResult.AllGranted(granted) else PermissionResult.Partial(
             granted,
             denied
         )
     }
 
     private fun addHostFragment(requestKey: String) {
-        val tag = "PermissionHost_$requestKey"
+        val tag = "${Constants.FRAGMENT_TAG_PREFIX}$requestKey"
         // ensure not duplicated
         if (fm.findFragmentByTag(tag) != null) return
         val host = PermissionHostFragment.newInstance(requestKey, perms.toList())

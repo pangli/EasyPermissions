@@ -6,7 +6,7 @@ import androidx.annotation.StringRes
 /**
  * 常用权限组
  */
-enum class PermissionGroup(val permissions: Array<String>, @StringRes val labelRes: Int) {
+enum class PermissionGroup(val permissions: Array<String>, @param:StringRes val labelRes: Int) {
     CAMERA(
         arrayOf(Manifest.permission.CAMERA),
         R.string.permission_camera

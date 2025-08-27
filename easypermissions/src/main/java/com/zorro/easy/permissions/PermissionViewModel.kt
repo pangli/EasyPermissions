@@ -4,66 +4,87 @@ import android.app.Application
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
 
 /**
  * 保存请求流程的关键状态，确保旋转时流程不丢失
  */
 class PermissionViewModel(
-    app: Application,
-    savedStateHandle: SavedStateHandle
+    app: Application
 ) : AndroidViewModel(app) {
 
-    private val _state =
-        MutableStateFlow(savedStateHandle.get<State>("state") ?: State())
-    val state = _state.asStateFlow()
+    private val _permissionUiState = MutableStateFlow(PermissionUiState())
+    val permissionUiState = _permissionUiState.asStateFlow()
 
-    private val _effect = MutableSharedFlow<Effect>(replay = 0)
+    // ---- Effect ---- (一次性事件，不保留 replay)
+    private val _effect = MutableSharedFlow<Effect>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val effect = _effect.asSharedFlow()
 
-    private val s = savedStateHandle
 
-    private fun setState(state: State) {
-        _state.value = state
-        s["state"] = state
+    /** 发出一次性事件（保证不丢失） */
+    private fun sendEffect(effect: Effect) {
+        viewModelScope.launch {
+            _effect.emit(effect)
+        }
     }
 
-    fun start(requestKey: String, perms: List<String>, toRequest: List<String>) {
-        setState(
-            State(
+    /**
+     * 启动申请权限状态
+     */
+    fun start(requestKey: String, allPermissions: List<String>, requestPermissions: List<String>) {
+        _permissionUiState.update {
+            it.copy(
                 requestKey = requestKey,
-                allPermissions = perms,
-                toRequest = toRequest
+                allPermissions = allPermissions,
+                requestPermissions = requestPermissions
             )
-        )
-        _effect.tryEmit(Effect.LaunchSystemRequest)
+        }
     }
 
+    /**
+     * 修改是否启动了权限申请标志
+     */
     fun markLaunched() {
-        val cur = _state.value
-        setState(cur.copy(launched = true))
+        _permissionUiState.update {
+            it.copy(
+                launched = true
+            )
+        }
     }
 
-    fun onSystemResult(
+    /**
+     * 权限申请结果
+     */
+    fun onActivityResult(
         grantedList: List<String>,
         deniedList: List<String>,
         permanentlyDenied: List<String>
     ) {
         // 判定顺序在 ViewModel：但真正的 ShowSettingsDialog/Completed 由 fragment 发起或由 VM 发 effect
         if (deniedList.isEmpty()) {
-            _effect.tryEmit(Effect.Completed(PermissionResult.Success(grantedList)))
+            sendEffect(Effect.Completed(PermissionResult.AllGranted(grantedList)))
         } else {
             if (permanentlyDenied.isNotEmpty() && permanentlyDenied.size == deniedList.size) {
                 // 全部被永久拒绝
-                setState(_state.value.copy(permanentlyDenied = permanentlyDenied))
-                _effect.tryEmit(Effect.ShowSettingsDialog(permanentlyDenied))
+                _permissionUiState.update {
+                    it.copy(permanentlyDenied = permanentlyDenied)
+                }
+                sendEffect(Effect.ShowSettingsDialog(permanentlyDenied))
             } else {
                 // 部分授予（或部分永久拒绝，但不是全部都是永久拒绝），直接返回 Partial
-                _effect.tryEmit(
+                sendEffect(
                     Effect.Completed(
                         PermissionResult.Partial(
                             grantedList,
@@ -75,28 +96,36 @@ class PermissionViewModel(
         }
     }
 
+    /**
+     * 跳转到设置页
+     */
     fun openedSettings() {
-        val cur = _state.value
-        setState(cur.copy(waitingSettingsReturn = true))
+        _permissionUiState.update {
+            it.copy(
+                waitingSettingsReturn = true
+            )
+        }
     }
 
     fun onResumeCheck() {
         // check current permission status
-        val ctx = getApplication<Application>()
-        val all = _state.value.allPermissions
-        val stillDenied = all.filter {
-            ContextCompat.checkSelfPermission(ctx, it) != PackageManager.PERMISSION_GRANTED
+        if (_permissionUiState.value.waitingSettingsReturn) {
+            val ctx = getApplication<Application>()
+            val all = _permissionUiState.value.allPermissions
+            val stillDenied = all.filter {
+                ContextCompat.checkSelfPermission(ctx, it) != PackageManager.PERMISSION_GRANTED
+            }
+            if (stillDenied.isEmpty()) {
+                sendEffect(Effect.Completed(PermissionResult.AllGranted(all)))
+                return
+            }
+            // if all still denied are permanently denied -> show dialog again
+            // Note: fragment will compute shouldShow... because VM cannot call shouldShowRequestPermissionRationale
+            sendEffect(Effect.ShowSettingsDialog(stillDenied))
         }
-        if (stillDenied.isEmpty()) {
-            _effect.tryEmit(Effect.Completed(PermissionResult.Success(all)))
-            return
-        }
-        // if all still denied are permanently denied -> show dialog again
-        // Note: fragment will compute shouldShow... because VM cannot call shouldShowRequestPermissionRationale
-        _effect.tryEmit(Effect.ShowSettingsDialog(stillDenied))
     }
 
     fun completedWith(result: PermissionResult) {
-        _effect.tryEmit(Effect.Completed(result))
+        sendEffect(Effect.Completed(result))
     }
 }

@@ -2,37 +2,42 @@ package com.zorro.easy.permissions
 
 import android.app.Dialog
 import android.os.Bundle
+import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.setFragmentResult
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.zorro.easy.permissions.constant.Constants
 
 /**
- * DialogFragment 用于提示“权限被永久拒绝”。HostFragment 负责调用 show() 并实现回调接口。
+ * DialogFragment 用于提示“权限被永久拒绝”。
  */
 class PermissionDeniedDialogFragment : DialogFragment() {
 
-    interface Callback {
-        fun onGoToSettings()
-        fun onCancelFromDialog()
+    @Suppress("DEPRECATION")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        retainInstance = true
     }
 
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        retainInstance = true
-//    }
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val perms = arguments?.getStringArray(ARG_PERMS) ?: emptyArray()
+        val perms = arguments?.getStringArray(Constants.DIALOG_FRAGMENT_ARG_PERMS) ?: emptyArray()
         val message = buildMessage(perms)
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.permission_denied_title))
             .setMessage(getString(R.string.permission_denied_message, message))
             .setCancelable(false)
             .setPositiveButton(getString(R.string.permission_go_settings)) { _, _ ->
-                (parentFragment as? Callback)?.onGoToSettings()
+                setFragmentResult(
+                    Constants.DIALOG_FRAGMENT_REQUEST_KEY,
+                    bundleOf(Constants.DIALOG_FRAGMENT_RESULT_KEY to true)
+                )
             }
             .setNegativeButton(getString(R.string.permission_cancel)) { _, _ ->
-                (parentFragment as? Callback)?.onCancelFromDialog()
+                setFragmentResult(
+                    Constants.DIALOG_FRAGMENT_REQUEST_KEY,
+                    bundleOf(Constants.DIALOG_FRAGMENT_RESULT_KEY to false)
+                )
             }
             .create()
     }
@@ -55,18 +60,21 @@ class PermissionDeniedDialogFragment : DialogFragment() {
     }
 
     companion object {
-        private const val ARG_PERMS = "arg_perms"
-        private const val TAG_PREFIX = "PermissionDeniedDialog_"
         fun show(
             hostFragmentManager: FragmentManager,
             requestKey: String,
             perms: List<String>
         ) {
-            val tag = TAG_PREFIX + requestKey
-            // dismiss existing if any
+            val tag = Constants.DIALOG_FRAGMENT_TAG_PREFIX + requestKey
+            // 关闭已存在的DialogFragment
             (hostFragmentManager.findFragmentByTag(tag) as? DialogFragment)?.dismissAllowingStateLoss()
             val df = PermissionDeniedDialogFragment().apply {
-                arguments = Bundle().apply { putStringArray(ARG_PERMS, perms.toTypedArray()) }
+                arguments = Bundle().apply {
+                    putStringArray(
+                        Constants.DIALOG_FRAGMENT_ARG_PERMS,
+                        perms.toTypedArray()
+                    )
+                }
             }
             df.show(hostFragmentManager, tag)
         }
