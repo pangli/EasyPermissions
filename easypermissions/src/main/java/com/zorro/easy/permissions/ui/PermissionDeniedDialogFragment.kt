@@ -1,4 +1,4 @@
-package com.zorro.easy.permissions
+package com.zorro.easy.permissions.ui
 
 import android.app.Dialog
 import android.os.Bundle
@@ -7,21 +7,28 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.setFragmentResult
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.zorro.easy.permissions.PermissionGroup
+import com.zorro.easy.permissions.R
 import com.zorro.easy.permissions.constant.Constants
 
 /**
  * DialogFragment 用于提示“权限被永久拒绝”。
  */
 class PermissionDeniedDialogFragment : DialogFragment() {
-
-    @Suppress("DEPRECATION")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        retainInstance = true
+    private val requestKey: String by lazy {
+        arguments?.getString(Constants.DIALOG_FRAGMENT_ARG_REQUEST_KEY) ?: ""
+    }
+    private val perms: Array<String> by lazy {
+        arguments?.getStringArray(Constants.DIALOG_FRAGMENT_ARG_PERMS) ?: emptyArray()
     }
 
+//    @Suppress("DEPRECATION")
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        retainInstance = true
+//    }
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val perms = arguments?.getStringArray(Constants.DIALOG_FRAGMENT_ARG_PERMS) ?: emptyArray()
         val message = buildMessage(perms)
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.permission_denied_title))
@@ -29,13 +36,13 @@ class PermissionDeniedDialogFragment : DialogFragment() {
             .setCancelable(false)
             .setPositiveButton(getString(R.string.permission_go_settings)) { _, _ ->
                 setFragmentResult(
-                    Constants.DIALOG_FRAGMENT_REQUEST_KEY,
+                    "${Constants.DIALOG_FRAGMENT_REQUEST_KEY}$requestKey",
                     bundleOf(Constants.DIALOG_FRAGMENT_RESULT_KEY to true)
                 )
             }
             .setNegativeButton(getString(R.string.permission_cancel)) { _, _ ->
                 setFragmentResult(
-                    Constants.DIALOG_FRAGMENT_REQUEST_KEY,
+                    "${Constants.DIALOG_FRAGMENT_REQUEST_KEY}$requestKey",
                     bundleOf(Constants.DIALOG_FRAGMENT_RESULT_KEY to false)
                 )
             }
@@ -73,6 +80,10 @@ class PermissionDeniedDialogFragment : DialogFragment() {
                     putStringArray(
                         Constants.DIALOG_FRAGMENT_ARG_PERMS,
                         perms.toTypedArray()
+                    )
+                    putString(
+                        Constants.DIALOG_FRAGMENT_ARG_REQUEST_KEY,
+                        requestKey
                     )
                 }
             }

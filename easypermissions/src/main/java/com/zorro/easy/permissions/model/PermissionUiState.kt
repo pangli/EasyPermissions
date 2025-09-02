@@ -1,9 +1,11 @@
-package com.zorro.easy.permissions
+package com.zorro.easy.permissions.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
-
+/**
+ * UI 渲染所需的完整状态
+ */
 @Parcelize
 data class PermissionUiState(
     val requestKey: String = "",
@@ -12,11 +14,4 @@ data class PermissionUiState(
     val requestPermissions: List<String> = emptyList(),
     val permanentlyDenied: List<String> = emptyList(),
     val waitingSettingsReturn: Boolean = false,
-) : Parcelable
-
-sealed class Effect {
-    data class ShowSettingsDialog(val perms: List<String>) : Effect()
-    data class Completed(val result: PermissionResult) : Effect()
-}
-
-
+) : MviState, Parcelable

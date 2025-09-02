@@ -1,4 +1,4 @@
-package com.zorro.easy.permissions
+package com.zorro.easy.permissions.utils
 
 import android.content.Context
 

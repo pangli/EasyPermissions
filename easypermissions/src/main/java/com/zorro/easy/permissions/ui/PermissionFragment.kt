@@ -1,4 +1,4 @@
-package com.zorro.easy.permissions
+package com.zorro.easy.permissions.ui
 
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -11,7 +11,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.zorro.easy.permissions.viewmodel.PermissionFragmentViewModel
+import com.zorro.easy.permissions.utils.PermissionSettingsOpener
 import com.zorro.easy.permissions.constant.Constants
+import com.zorro.easy.permissions.utils.filterSupportedPermissions
+import com.zorro.easy.permissions.model.PermissionEvent
+import com.zorro.easy.permissions.model.PermissionEffect
 import kotlinx.coroutines.launch
 
 
@@ -31,7 +36,7 @@ import kotlinx.coroutines.launch
  */
 class PermissionHostFragment : Fragment() {
 
-    private val vm: PermissionViewModel by viewModels()
+    private val vm: PermissionFragmentViewModel by viewModels()
 
     private val requestKey: String by lazy {
         arguments?.getString(Constants.FRAGMENT_ARG_REQUEST_KEY) ?: ""
@@ -59,14 +64,14 @@ class PermissionHostFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // keep no UI
-        retainInstance = false
+        // retainInstance = false
         subscribeToVm()
         // Start when fragment first created if state not started
-//        if (savedInstanceState == null) {
-        // version filter
-        val supported = filterSupportedPermissions(requireContext(), allPerms).distinct()
-        vm.start(requestKey, allPerms, supported)
-//        }
+        if (savedInstanceState == null) {
+            // version filter
+            val supported = filterSupportedPermissions(requireContext(), allPerms).distinct()
+            vm.start(requestKey, allPerms, supported)
+        }
     }
 
     private fun subscribeToVm() {
@@ -89,7 +94,7 @@ class PermissionHostFragment : Fragment() {
                 vm.effect.collect { eff ->
                     // 处理 effect
                     when (eff) {
-                        is Effect.ShowSettingsDialog -> {
+                        is PermissionEffect.ShowSettingsDialog -> {
                             // show dialog (use parentFragmentManager) with unique tag
                             registerListenerFragmentResultListener()
                             PermissionDeniedDialogFragment.show(
@@ -99,10 +104,10 @@ class PermissionHostFragment : Fragment() {
                             )
                         }
 
-                        is Effect.Completed -> {
+                        is PermissionEffect.Completed -> {
                             // Completed -> send FragmentResult back to caller and remove self
                             val bundle = when (val r = eff.result) {
-                                is PermissionResult.AllGranted -> Bundle().apply {
+                                is PermissionEvent.AllGranted -> Bundle().apply {
                                     putBoolean(Constants.FRAGMENT_RESULT_GRANTED_STATE_KEY, true)
                                     putStringArrayList(
                                         Constants.FRAGMENT_RESULT_GRANTED_LIST_KEY,
@@ -114,7 +119,7 @@ class PermissionHostFragment : Fragment() {
                                     )
                                 }
 
-                                is PermissionResult.Partial -> Bundle().apply {
+                                is PermissionEvent.Partial -> Bundle().apply {
                                     putBoolean(Constants.FRAGMENT_RESULT_GRANTED_STATE_KEY, false)
                                     putStringArrayList(
                                         Constants.FRAGMENT_RESULT_GRANTED_LIST_KEY,
@@ -150,7 +155,7 @@ class PermissionHostFragment : Fragment() {
     }
 
     private fun registerListenerFragmentResultListener() {
-        setFragmentResultListener(Constants.DIALOG_FRAGMENT_REQUEST_KEY) { _, bundle ->
+        setFragmentResultListener("${Constants.DIALOG_FRAGMENT_REQUEST_KEY}$requestKey") { _, bundle ->
             val confirmed = bundle.getBoolean(Constants.DIALOG_FRAGMENT_RESULT_KEY)
             if (confirmed) {
                 onConfirmFromDialog()
@@ -177,7 +182,7 @@ class PermissionHostFragment : Fragment() {
             ) == PackageManager.PERMISSION_GRANTED
         }
         val denied = allPerms - granted
-        vm.completedWith(PermissionResult.Partial(granted, denied))
+        vm.completedWith(PermissionEvent.Partial(granted, denied))
     }
 
     companion object {

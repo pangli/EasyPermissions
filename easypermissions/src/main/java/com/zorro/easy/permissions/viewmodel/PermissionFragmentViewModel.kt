@@ -1,10 +1,13 @@
-package com.zorro.easy.permissions
+package com.zorro.easy.permissions.viewmodel
 
 import android.app.Application
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.zorro.easy.permissions.model.PermissionEvent
+import com.zorro.easy.permissions.model.PermissionEffect
+import com.zorro.easy.permissions.model.PermissionUiState
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,11 +16,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-
 /**
  * 保存请求流程的关键状态，确保旋转时流程不丢失
  */
-class PermissionViewModel(
+class PermissionFragmentViewModel(
     app: Application
 ) : AndroidViewModel(app) {
 
@@ -25,18 +27,18 @@ class PermissionViewModel(
     val permissionUiState = _permissionUiState.asStateFlow()
 
     // ---- Effect ---- (一次性事件，不保留 replay)
-    private val _effect = MutableSharedFlow<Effect>(
+    private val _permissionEffect = MutableSharedFlow<PermissionEffect>(
         replay = 0,
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    val effect = _effect.asSharedFlow()
+    val effect = _permissionEffect.asSharedFlow()
 
 
     /** 发出一次性事件（保证不丢失） */
-    private fun sendEffect(effect: Effect) {
+    private fun sendEffect(permissionEffect: PermissionEffect) {
         viewModelScope.launch {
-            _effect.emit(effect)
+            _permissionEffect.emit(permissionEffect)
         }
     }
 
@@ -74,19 +76,19 @@ class PermissionViewModel(
     ) {
         // 判定顺序在 ViewModel：但真正的 ShowSettingsDialog/Completed 由 fragment 发起或由 VM 发 effect
         if (deniedList.isEmpty()) {
-            sendEffect(Effect.Completed(PermissionResult.AllGranted(grantedList)))
+            sendEffect(PermissionEffect.Completed(PermissionEvent.AllGranted(grantedList)))
         } else {
             if (permanentlyDenied.isNotEmpty() && permanentlyDenied.size == deniedList.size) {
                 // 全部被永久拒绝
                 _permissionUiState.update {
                     it.copy(permanentlyDenied = permanentlyDenied)
                 }
-                sendEffect(Effect.ShowSettingsDialog(permanentlyDenied))
+                sendEffect(PermissionEffect.ShowSettingsDialog(permanentlyDenied))
             } else {
                 // 部分授予（或部分永久拒绝，但不是全部都是永久拒绝），直接返回 Partial
                 sendEffect(
-                    Effect.Completed(
-                        PermissionResult.Partial(
+                    PermissionEffect.Completed(
+                        PermissionEvent.Partial(
                             grantedList,
                             deniedList
                         )
@@ -116,16 +118,16 @@ class PermissionViewModel(
                 ContextCompat.checkSelfPermission(ctx, it) != PackageManager.PERMISSION_GRANTED
             }
             if (stillDenied.isEmpty()) {
-                sendEffect(Effect.Completed(PermissionResult.AllGranted(all)))
+                sendEffect(PermissionEffect.Completed(PermissionEvent.AllGranted(all)))
                 return
             }
             // if all still denied are permanently denied -> show dialog again
             // Note: fragment will compute shouldShow... because VM cannot call shouldShowRequestPermissionRationale
-            sendEffect(Effect.ShowSettingsDialog(stillDenied))
+            sendEffect(PermissionEffect.ShowSettingsDialog(stillDenied))
         }
     }
 
-    fun completedWith(result: PermissionResult) {
-        sendEffect(Effect.Completed(result))
+    fun completedWith(result: PermissionEvent) {
+        sendEffect(PermissionEffect.Completed(result))
     }
 }
