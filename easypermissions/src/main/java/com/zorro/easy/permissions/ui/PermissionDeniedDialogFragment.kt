@@ -51,10 +51,13 @@ class PermissionDeniedDialogFragment : DialogFragment() {
 
     private fun buildMessage(permissions: Array<String>): String {
         val context = requireContext()
-        val list = permissions.map { perm ->
-            PermissionGroup.entries.firstOrNull { group ->
-                group.permissions.contains(perm)
-            }?.let { context.getString(it.labelRes) } ?: "Unknown"
+        val list = permissions.mapNotNull { perm ->
+            PermissionGroup.findGroupByPermission(perm)?.let { group ->
+                when (group) {
+                    is PermissionGroup.BuiltIn -> context.getString(group.labelRes)
+                    is PermissionGroup.Custom -> group.label
+                }
+            }
         }.distinct()
         return when (list.size) {
             0 -> ""

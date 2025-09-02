@@ -9,9 +9,9 @@
         android:name="android.hardware.camera"
         android:required="false" />
 
-<!--    <queries>-->
-<!--        <package android:name="com.bd.tools" />-->
-<!--    </queries>-->
+    <!--    <queries>-->
+    <!--        <package android:name="com.bd.tools" />-->
+    <!--    </queries>-->
 
     <uses-permission android:name="com.android.permission.GET_INSTALLED_APPS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -31,7 +31,6 @@
         android:theme="@style/Theme.EasyPermissions">
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -14,7 +14,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.zorro.easy.permissions.viewmodel.PermissionFragmentViewModel
 import com.zorro.easy.permissions.utils.PermissionSettingsOpener
 import com.zorro.easy.permissions.constant.Constants
-import com.zorro.easy.permissions.utils.filterSupportedPermissions
 import com.zorro.easy.permissions.model.PermissionEvent
 import com.zorro.easy.permissions.model.PermissionEffect
 import kotlinx.coroutines.launch
@@ -69,8 +68,7 @@ class PermissionHostFragment : Fragment() {
         // Start when fragment first created if state not started
         if (savedInstanceState == null) {
             // version filter
-            val supported = filterSupportedPermissions(requireContext(), allPerms).distinct()
-            vm.start(requestKey, allPerms, supported)
+            vm.start(requestKey, allPerms, allPerms)
         }
     }
 

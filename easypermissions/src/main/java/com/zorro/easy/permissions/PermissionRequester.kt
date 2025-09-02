@@ -17,24 +17,33 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import java.util.UUID
-import kotlin.collections.addAll
 
 /**
  * 外部调用类：支持 from(activity) / from(fragment)，DSL，callback / await / flow。
  */
 class PermissionRequester private constructor(
     private val fm: FragmentManager,
-    private val lifecycleOwnerForListener: LifecycleOwner, // Activity or Fragment
+    private val lifecycleOwner: LifecycleOwner, // Activity or Fragment
     private val originalOrientation: Int
 ) {
     private val perms = linkedSetOf<String>()
 
     fun permissions(vararg groups: PermissionGroup) = apply {
-        groups.forEach { perms.addAll(it.permissions) }
+        groups.forEach { group ->
+            group.permissions.forEach { perm ->
+                if (PermissionSupportRegistry.isSupported(context, perm)) {
+                    perms.add(perm)
+                }
+            }
+        }
     }
 
     fun permissions(vararg rawPerms: String) = apply {
-        rawPerms.forEach { perms.add(it) }
+        rawPerms.forEach { perm ->
+            if (PermissionSupportRegistry.isSupported(context, perm)) {
+                perms.add(perm)
+            }
+        }
     }
 
     /** callback 方式（DSL） */
@@ -67,14 +76,14 @@ class PermissionRequester private constructor(
 
     /** Flow 方式：借助 ViewModel */
     fun asFlowByViewModel() {
-        when (lifecycleOwnerForListener) {
+        when (lifecycleOwner) {
             is FragmentActivity -> {
-                val vm: PermissionViewModel by lifecycleOwnerForListener.viewModels()
+                val vm: PermissionViewModel by lifecycleOwner.viewModels()
                 vm.request(this)
             }
 
             is Fragment -> {
-                val vm: PermissionViewModel by lifecycleOwnerForListener.viewModels()
+                val vm: PermissionViewModel by lifecycleOwner.viewModels()
                 vm.request(this)
             }
 
@@ -84,18 +93,18 @@ class PermissionRequester private constructor(
 
     private fun registerListener(requestKey: String, callback: (PermissionEvent) -> Unit) {
         // Using lifecycle owner: if activity, pass activity; if fragment, pass the fragment
-        when (lifecycleOwnerForListener) {
+        when (lifecycleOwner) {
             is FragmentActivity -> {
-                fm.setFragmentResultListener(requestKey, lifecycleOwnerForListener) { _, bundle ->
+                fm.setFragmentResultListener(requestKey, lifecycleOwner) { _, bundle ->
                     callback(bundleToPermissionResult(bundle))
-                    ScreenOrientationUtil.unlock(lifecycleOwnerForListener, originalOrientation)
+                    ScreenOrientationUtil.unlock(lifecycleOwner, originalOrientation)
                 }
             }
 
             is Fragment -> {
-                fm.setFragmentResultListener(requestKey, lifecycleOwnerForListener) { _, bundle ->
+                fm.setFragmentResultListener(requestKey, lifecycleOwner) { _, bundle ->
                     callback(bundleToPermissionResult(bundle))
-                    ScreenOrientationUtil.unlock(lifecycleOwnerForListener, originalOrientation)
+                    ScreenOrientationUtil.unlock(lifecycleOwner, originalOrientation)
                 }
             }
 
@@ -123,14 +132,20 @@ class PermissionRequester private constructor(
         fm.beginTransaction().add(host, tag).commitAllowingStateLoss()
     }
 
+    private val context = when (lifecycleOwner) {
+        is FragmentActivity -> lifecycleOwner.applicationContext   // Activity 本身就是 Context
+        is Fragment -> lifecycleOwner.requireContext()  // Fragment 已 attach 时
+        else -> throw IllegalArgumentException("Unsupported LifecycleOwner")
+    }
+
     private fun unlockScreenOrientation() {
-        when (lifecycleOwnerForListener) {
+        when (lifecycleOwner) {
             is FragmentActivity -> {
-                ScreenOrientationUtil.unlock(lifecycleOwnerForListener, originalOrientation)
+                ScreenOrientationUtil.unlock(lifecycleOwner, originalOrientation)
             }
 
             is Fragment -> {
-                ScreenOrientationUtil.unlock(lifecycleOwnerForListener, originalOrientation)
+                ScreenOrientationUtil.unlock(lifecycleOwner, originalOrientation)
             }
 
             else -> throw IllegalArgumentException("Unsupported lifecycle owner")
