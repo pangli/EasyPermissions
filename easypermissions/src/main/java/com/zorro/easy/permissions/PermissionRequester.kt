@@ -1,11 +1,9 @@
 package com.zorro.easy.permissions
 
 import android.os.Bundle
-import androidx.activity.viewModels
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.LifecycleOwner
 import com.zorro.easy.permissions.constant.Constants
 import com.zorro.easy.permissions.model.PermissionEvent
@@ -75,20 +73,8 @@ class PermissionRequester private constructor(
     }
 
     /** Flow 方式：借助 ViewModel */
-    fun asFlowByViewModel() {
-        when (lifecycleOwner) {
-            is FragmentActivity -> {
-                val vm: PermissionViewModel by lifecycleOwner.viewModels()
-                vm.request(this)
-            }
-
-            is Fragment -> {
-                val vm: PermissionViewModel by lifecycleOwner.viewModels()
-                vm.request(this)
-            }
-
-            else -> throw IllegalArgumentException("Unsupported lifecycle owner")
-        }
+    fun asFlowByViewModel(vm: PermissionViewModel) {
+        vm.request(this)
     }
 
     private fun registerListener(requestKey: String, callback: (PermissionEvent) -> Unit) {

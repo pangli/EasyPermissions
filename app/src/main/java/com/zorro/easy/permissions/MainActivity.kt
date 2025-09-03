@@ -15,14 +15,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.zorro.easy.permissions.databinding.ActivityMainBinding
 import com.zorro.easy.permissions.model.PermissionEvent
-import com.zorro.easy.permissions.viewmodel.PermissionViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var vb: ActivityMainBinding
-    private val vm: PermissionViewModel by viewModels()
+    private val vm: MainViewModel by viewModels()
 
     @SuppressLint("MissingInflatedId", "SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,7 +108,7 @@ class MainActivity : AppCompatActivity() {
                     PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
                     PermissionGroups.CAMERA, PermissionGroups.APPS
                 )
-                .asFlowByViewModel()
+                .asFlowByViewModel(vm)
         }
     }
 

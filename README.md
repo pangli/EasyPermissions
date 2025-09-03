@@ -101,7 +101,11 @@ PermissionRequester.from(this@MainActivity)
 ### 4) 使用ViewModel+Flow方式
 
 ```kotlin
-//1
+//step 1
+class MainViewModel : PermissionViewModel()
+//step 2
+private val vm: MainViewModel by viewModels()
+//step 3
 lifecycleScope.launch {
     repeatOnLifecycle(Lifecycle.State.STARTED) {
         vm.permissionResult.collect { result ->
@@ -109,14 +113,14 @@ lifecycleScope.launch {
         }
     }
 }
-//2
+//step 4
 PermissionRequester.from(this@MainActivity)
     .permissions(
         PermissionGroups.PHONE, PermissionGroups.LOCATION,
         PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
         PermissionGroups.CAMERA, PermissionGroups.APPS
     )
-    .asFlowByViewModel()
+    .asFlowByViewModel(vm)
 ```
 
 ## 授权结果处理
