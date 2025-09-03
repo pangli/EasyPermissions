@@ -8,7 +8,7 @@ import com.zorro.easy.permissions.utils.AppListPermissionUtils
 typealias PermissionSupportChecker = (Context) -> Boolean
 
 /**
- * 权限过滤
+ * 权限过滤规则
  */
 object PermissionSupportRegistry {
     private val checkerMap = mutableMapOf<String, PermissionSupportChecker>()
@@ -21,9 +21,21 @@ object PermissionSupportRegistry {
         }
     }
 
-    /** 注册外部扩展规则 */
+    /**
+     * 注册权限过滤规则
+     * @param permission String
+     * @param checker PermissionSupportChecker
+     */
     fun registerChecker(permission: String, checker: PermissionSupportChecker) {
         checkerMap[permission] = checker
+    }
+
+    /**
+     * 注册权限过滤规则
+     * @param map Map<String, PermissionSupportChecker>
+     */
+    fun registerChecker(map: Map<String, PermissionSupportChecker>) {
+        checkerMap.putAll(map)
     }
 
     /** 判断权限是否支持 */

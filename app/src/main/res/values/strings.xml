@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">EasyPermissions</string>
+    <string name="test_label">测试</string>
 </resources>

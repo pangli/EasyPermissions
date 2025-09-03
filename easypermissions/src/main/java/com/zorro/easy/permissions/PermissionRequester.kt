@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import com.zorro.easy.permissions.constant.Constants
+import com.zorro.easy.permissions.group.PermissionGroup
 import com.zorro.easy.permissions.model.PermissionEvent
 import com.zorro.easy.permissions.ui.PermissionHostFragment
 import com.zorro.easy.permissions.utils.ScreenOrientationUtil

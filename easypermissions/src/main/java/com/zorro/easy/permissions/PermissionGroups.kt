@@ -1,5 +1,8 @@
 package com.zorro.easy.permissions
 
+import androidx.annotation.StringRes
+import com.zorro.easy.permissions.group.PermissionGroup
+
 
 /**
  * 常用权限组
@@ -13,7 +16,19 @@ object PermissionGroups {
     val NOTIFICATIONS = PermissionGroup.Companion.Notifications
     val APPS = PermissionGroup.Companion.Apps
 
-    // 自定义权限组（可随时扩展）
+    /**
+     * 自定义权限组（可随时扩展）
+     */
+    fun custom(
+        permissions: Array<String>,
+        @StringRes labelRes: Int
+    ): PermissionGroup.BuiltIn {
+        return PermissionGroup.BuiltIn(permissions, labelRes)
+    }
+
+    /**
+     * 自定义权限组（可随时扩展）
+     */
     fun custom(
         permissions: Array<String>,
         label: String

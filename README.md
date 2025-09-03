@@ -20,7 +20,7 @@
 
 ```kotlin
 //自定义权限组
-val vendorSpecial = PermissionGroup.Custom(
+val vendorSpecial = PermissionGroups.Custom(
     arrayOf("com.vendor.permission.SPECIAL_FEATURE"),
     "厂商特殊权限"
 )

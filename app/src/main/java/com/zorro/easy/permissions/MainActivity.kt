@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         //自定义权限组
-        val vendorSpecial = PermissionGroup.Custom(
+        val vendorSpecial = PermissionGroups.custom(
             arrayOf("com.vendor.permission.SPECIAL_FEATURE"),
             "厂商特殊权限"
         )
@@ -54,6 +54,10 @@ class MainActivity : AppCompatActivity() {
                     handleResult(result)
                 }
         }
+        val vendorSpecial2 = PermissionGroups.custom(
+            arrayOf("com.test.permission.TEST"),
+            R.string.test_label
+        )
         vb.buttonAwait.setOnClickListener {
             lifecycleScope.launch {
                 val result = PermissionRequester.from(this@MainActivity)
@@ -61,7 +65,7 @@ class MainActivity : AppCompatActivity() {
                         PermissionGroups.PHONE, PermissionGroups.LOCATION,
                         PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
                         PermissionGroups.CAMERA, PermissionGroups.APPS,
-                        vendorSpecial
+                        vendorSpecial2
                     ).await()
                 handleResult(result)
             }
@@ -84,8 +88,7 @@ class MainActivity : AppCompatActivity() {
                 .permissions(
                     PermissionGroups.PHONE, PermissionGroups.LOCATION,
                     PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
-                    PermissionGroups.CAMERA, PermissionGroups.APPS,
-                    vendorSpecial
+                    PermissionGroups.CAMERA, PermissionGroups.APPS
                 ).asFlow()
                 .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
                 .onEach {

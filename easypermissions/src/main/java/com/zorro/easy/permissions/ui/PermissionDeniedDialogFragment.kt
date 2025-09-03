@@ -7,7 +7,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.setFragmentResult
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.zorro.easy.permissions.PermissionGroup
+import com.zorro.easy.permissions.group.PermissionGroup
 import com.zorro.easy.permissions.R
 import com.zorro.easy.permissions.constant.Constants
 

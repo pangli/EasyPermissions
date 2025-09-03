@@ -1,7 +1,8 @@
-package com.zorro.easy.permissions
+package com.zorro.easy.permissions.group
 
 import android.Manifest
 import androidx.annotation.StringRes
+import com.zorro.easy.permissions.R
 import com.zorro.easy.permissions.utils.AppListPermissionUtils
 
 /**
@@ -13,7 +14,7 @@ sealed class PermissionGroup(val permissions: Array<String>) {
     }
 
     /** 内置权限组（单例 object） */
-    sealed class BuiltIn(
+    open class BuiltIn(
         permissions: Array<String>,
         @param:StringRes val labelRes: Int
     ) : PermissionGroup(permissions)
