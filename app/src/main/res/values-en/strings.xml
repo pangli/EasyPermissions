@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">EasyPermissions</string>
-    <string name="test_label">test</string>
+    <string name="test_label">Special permissions for manufacturers</string>
 </resources>

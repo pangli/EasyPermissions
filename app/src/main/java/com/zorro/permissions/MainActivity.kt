@@ -1,4 +1,4 @@
-package com.zorro.easy.permissions
+package com.zorro.permissions
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -13,7 +13,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.zorro.easy.permissions.databinding.ActivityMainBinding
+import com.zorro.easy.permissions.PermissionGroups
+import com.zorro.easy.permissions.PermissionRequester
+import com.zorro.easy.permissions.PermissionSupportRegistry
+import com.zorro.permissions.databinding.ActivityMainBinding
 import com.zorro.easy.permissions.model.PermissionEvent
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -37,14 +40,14 @@ class MainActivity : AppCompatActivity() {
         //自定义权限组
         val vendorSpecial = PermissionGroups.custom(
             arrayOf("com.vendor.permission.SPECIAL_FEATURE"),
-            "厂商特殊权限"
+            getString(R.string.test_label)
         )
         // 注册自定义规则，
         PermissionSupportRegistry.registerChecker("com.vendor.permission.SPECIAL_FEATURE") { _ ->
             Build.VERSION.SDK_INT >= 33
         }
         vb.buttonView.setOnClickListener {
-            PermissionRequester.from(this)
+            PermissionRequester.Companion.from(this)
                 .permissions(
                     PermissionGroups.PHONE, PermissionGroups.LOCATION,
                     PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
@@ -60,7 +63,7 @@ class MainActivity : AppCompatActivity() {
         )
         vb.buttonAwait.setOnClickListener {
             lifecycleScope.launch {
-                val result = PermissionRequester.from(this@MainActivity)
+                val result = PermissionRequester.Companion.from(this@MainActivity)
                     .permissions(
                         PermissionGroups.PHONE, PermissionGroups.LOCATION,
                         PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
@@ -84,7 +87,7 @@ class MainActivity : AppCompatActivity() {
 //                        handleResult(it)
 //                    }
 //            }
-            PermissionRequester.from(this@MainActivity)
+            PermissionRequester.Companion.from(this@MainActivity)
                 .permissions(
                     PermissionGroups.PHONE, PermissionGroups.LOCATION,
                     PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
@@ -105,7 +108,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         vb.buttonVmFlow.setOnClickListener {
-            PermissionRequester.from(this@MainActivity)
+            PermissionRequester.Companion.from(this@MainActivity)
                 .permissions(
                     PermissionGroups.PHONE, PermissionGroups.LOCATION,
                     PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,

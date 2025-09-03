@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.zorro.easy.permissions"
+    namespace = "com.zorro.permissions"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.zorro.easy.permissions"
+        applicationId = "com.zorro.permissions"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
