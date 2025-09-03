@@ -166,9 +166,8 @@ class PermissionHostFragment : Fragment() {
     // Dialog callbacks
     private fun onConfirmFromDialog() {
         // mark VM as waiting settings and open settings via startActivity (no ActivityResult)
-        vm.openedSettings()
+        vm.openedSettings(true)
         PermissionSettingsOpener.startSettingActivity(requireContext())
-
     }
 
     private fun onCancelFromDialog() {
@@ -180,6 +179,7 @@ class PermissionHostFragment : Fragment() {
             ) == PackageManager.PERMISSION_GRANTED
         }
         val denied = allPerms - granted
+        vm.openedSettings(false)
         vm.completedWith(PermissionEvent.Partial(granted, denied))
     }
 

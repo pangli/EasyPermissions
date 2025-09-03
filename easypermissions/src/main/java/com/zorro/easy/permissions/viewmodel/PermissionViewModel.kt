@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
 open class PermissionViewModel : ViewModel() {
-    private val _permissionResult = MutableSharedFlow<PermissionEvent>(replay = 1)
+    private val _permissionResult = MutableSharedFlow<PermissionEvent>(replay = 0)
     val permissionResult: SharedFlow<PermissionEvent> = _permissionResult
 
     fun request(requester: PermissionRequester) {

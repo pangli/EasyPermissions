@@ -78,7 +78,6 @@ lifecycleScope.launch {
             PermissionGroups.CAMERA, PermissionGroups.APPS,
             vendorSpecial
         ).asFlow()
-        .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
         .collect {
             handleResult(it)
         }
@@ -91,7 +90,6 @@ PermissionRequester.from(this@MainActivity)
         PermissionGroups.CAMERA, PermissionGroups.APPS,
         vendorSpecial
     ).asFlow()
-    .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
     .onEach {
         handleResult(it)
     }

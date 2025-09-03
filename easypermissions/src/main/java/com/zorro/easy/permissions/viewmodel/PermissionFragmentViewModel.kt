@@ -101,10 +101,10 @@ class PermissionFragmentViewModel(
     /**
      * 跳转到设置页
      */
-    fun openedSettings() {
+    fun openedSettings(waitingSettingsReturn: Boolean) {
         _permissionUiState.update {
             it.copy(
-                waitingSettingsReturn = true
+                waitingSettingsReturn = waitingSettingsReturn
             )
         }
     }

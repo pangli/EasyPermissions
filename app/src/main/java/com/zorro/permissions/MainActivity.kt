@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.zorro.easy.permissions.PermissionGroups
@@ -82,7 +81,6 @@ class MainActivity : AppCompatActivity() {
 //                        PermissionGroups.CAMERA, PermissionGroups.APPS,
 //                        vendorSpecial
 //                    ).asFlow()
-//                    .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
 //                    .collect {
 //                        handleResult(it)
 //                    }
@@ -93,7 +91,6 @@ class MainActivity : AppCompatActivity() {
                     PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
                     PermissionGroups.CAMERA, PermissionGroups.APPS
                 ).asFlow()
-                .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
                 .onEach {
                     handleResult(it)
                 }
