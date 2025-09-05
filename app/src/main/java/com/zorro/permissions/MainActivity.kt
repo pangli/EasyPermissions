@@ -123,16 +123,16 @@ class MainActivity : AppCompatActivity() {
     private fun handleResult(result: PermissionEvent) {
         when (result) {
             is PermissionEvent.AllGranted -> {
-                vb.textView.text = "已授予\n${result.granted.joinToString("\n")}"
-                Toast.makeText(this, "成功", Toast.LENGTH_SHORT).show()
+                vb.textView.text = "Granted\n${result.granted.joinToString("\n")}"
+                Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
             }
 
             is PermissionEvent.Partial -> {
                 vb.textView.text =
-                    "已授予\n${result.granted.joinToString("\n")}\n未授予\n${
+                    "Granted\n${result.granted.joinToString("\n")}\nDenied\n${
                         result.denied.joinToString("\n")
                     }"
-                Toast.makeText(this, "部分成功", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Partial success", Toast.LENGTH_SHORT).show()
             }
         }
     }

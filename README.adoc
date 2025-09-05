@@ -151,16 +151,16 @@ PermissionRequester.from(this@MainActivity)
 private fun handleResult(result: PermissionEvent) {
     when (result) {
         is PermissionEvent.AllGranted -> {
-            vb.textView.text = "已授予\n${result.granted.joinToString("\n")}"
-            Toast.makeText(this, "成功", Toast.LENGTH_SHORT).show()
+            val msg = "Granted\n${result.granted.joinToString("\n")}"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         }
 
         is PermissionEvent.Partial -> {
-            vb.textView.text =
-                "已授予\n${result.granted.joinToString("\n")}\n未授予\n${
+            val msg =
+                "Granted\n${result.granted.joinToString("\n")}\nDenied\n${
                     result.denied.joinToString("\n")
                 }"
-            Toast.makeText(this, "部分成功", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         }
     }
 }
