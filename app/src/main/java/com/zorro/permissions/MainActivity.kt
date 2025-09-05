@@ -3,6 +3,7 @@ package com.zorro.permissions
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -25,9 +26,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var vb: ActivityMainBinding
     private val vm: MainViewModel by viewModels()
 
-    @SuppressLint("MissingInflatedId", "SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("MainActivity", "onCreate")
         enableEdgeToEdge()
         vb = ActivityMainBinding.inflate(layoutInflater)
         setContentView(vb.root)
@@ -118,6 +119,7 @@ class MainActivity : AppCompatActivity() {
     /**
      * 授权结果处理
      */
+    @SuppressLint("SetTextI18n")
     private fun handleResult(result: PermissionEvent) {
         when (result) {
             is PermissionEvent.AllGranted -> {
@@ -133,5 +135,10 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "部分成功", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("MainActivity", "onDestroy")
     }
 }
