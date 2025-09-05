@@ -1,4 +1,4 @@
-== 使用MVI框架封装的权限请求框架
+== 权限请求框架
 
 :linkattrs:
 :project-group:   io.github.pangli
@@ -7,19 +7,22 @@
 
 image:https://img.shields.io/maven-central/v/{project-group}/{project-artifactId}?logo=apache%20maven[Download,link="https://search.maven.org/#search|ga|1|g:{project-group} AND a:{project-artifactId}"]
 
-== 外部调用
+== 实现说明
 
-1. 支持在Activity和Fragment中使用；
-2. 支持单个权限、多个权限和权限组申请；
-3. 支持基础调用、协程await()、Flow方式，支持DSL链式调用；
+1. 使用MVI框架封装
+2. 支持在Activity和Fragment中使用；
+3. 支持单个权限、多个权限和权限组申请；
+4. 支持基础调用、协程await()、Flow和ViewModel方式，支持Kotlin DSL语法；
 
-== 权限申请实现逻辑
+== 实现逻辑
 
 1. 权限申请主要逻辑放在无UI的Fragment中，此Fragment在申请过程中横竖屏切换无异常；
 2. 申请结果判断优先级为：当权限全部授予时返回成功回调，回调中包含授予的权限列表； 当部分授予时返回失败回调，回调中分别包含授予的和未授予的权限列表； 最后当未授予的权限都为永久拒绝的权限，弹出DialogFragment提示框引导去设置页手动授予，提示文案根据权限动态生成；
 3. 永久拒绝的权限跳转到设置页后，从设置页再回到应用后，继续检查权限，检查逻辑和顺序同第2点；
 
 == 添加依赖到项目的build.gradle.kts中
+
+image:https://img.shields.io/maven-central/v/{project-group}/{project-artifactId}?logo=apache%20maven[Download,link="https://search.maven.org/#search|ga|1|g:{project-group} AND a:{project-artifactId}"]
 
 [source,kotlin]
 ----
