@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
         )
         vb.buttonAwait.setOnClickListener {
             lifecycleScope.launch {
-                val result = PermissionRequester.Companion.from(this@MainActivity)
+                val result = PermissionRequester.from(this@MainActivity)
                     .permissions(
                         PermissionGroups.PHONE, PermissionGroups.LOCATION,
                         PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
 //                        handleResult(it)
 //                    }
 //            }
-            PermissionRequester.Companion.from(this@MainActivity)
+            PermissionRequester.from(this@MainActivity)
                 .permissions(
                     PermissionGroups.PHONE, PermissionGroups.LOCATION,
                     PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         vb.buttonVmFlow.setOnClickListener {
-            PermissionRequester.Companion.from(this@MainActivity)
+            PermissionRequester.from(this@MainActivity)
                 .permissions(
                     PermissionGroups.PHONE, PermissionGroups.LOCATION,
                     PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
