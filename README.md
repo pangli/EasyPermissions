@@ -1,9 +1,9 @@
-# 使用MVI框架封装的权限请求框架
-
 :linkattrs:
 :project-group:   io.github.pangli
 :project-artifactId: easy-permissions
 :project-version: 0.0.3
+
+# 使用MVI框架封装的权限请求框架
 
 image:https://img.shields.io/maven-central/v/{project-group}/{project-artifactId}?logo=apache%20maven[Download, link="https://search.maven.org/#search|ga|1|g:{project-group} AND a:{project-artifactId}"]
 ## 外部调用
