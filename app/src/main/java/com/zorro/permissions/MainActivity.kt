@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -26,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var vb: ActivityMainBinding
     private val vm: MainViewModel by viewModels()
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("MainActivity", "onCreate")
@@ -47,7 +49,7 @@ class MainActivity : AppCompatActivity() {
             Build.VERSION.SDK_INT >= 33
         }
         vb.buttonView.setOnClickListener {
-            PermissionRequester.Companion.from(this)
+            PermissionRequester.from(this)
                 .permissions(
                     PermissionGroups.PHONE, PermissionGroups.LOCATION,
                     PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
@@ -127,7 +129,7 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
             }
 
-            is PermissionEvent.Partial -> {
+            is PermissionEvent.PartialGranted -> {
                 vb.textView.text =
                     "Granted\n${result.granted.joinToString("\n")}\nDenied\n${
                         result.denied.joinToString("\n")

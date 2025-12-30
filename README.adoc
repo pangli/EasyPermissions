@@ -3,7 +3,7 @@
 :linkattrs:
 :project-group:   io.github.pangli
 :project-artifactId: easy-permissions
-:project-version: 0.0.3
+:project-version: 0.0.5
 
 image:https://img.shields.io/maven-central/v/{project-group}/{project-artifactId}?logo=apache%20maven[Download,link="https://search.maven.org/#search|ga|1|g:{project-group} AND a:{project-artifactId}"]
 
@@ -155,7 +155,7 @@ private fun handleResult(result: PermissionEvent) {
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         }
 
-        is PermissionEvent.Partial -> {
+        is PermissionEvent.PartialGranted -> {
             val msg =
                 "Granted\n${result.granted.joinToString("\n")}\nDenied\n${
                     result.denied.joinToString("\n")
