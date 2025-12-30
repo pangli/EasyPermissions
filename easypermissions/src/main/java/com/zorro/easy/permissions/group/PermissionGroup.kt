@@ -1,6 +1,8 @@
 package com.zorro.easy.permissions.group
 
 import android.Manifest
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import com.zorro.easy.permissions.R
 import com.zorro.easy.permissions.utils.AppListPermissionUtils
@@ -49,7 +51,7 @@ sealed class PermissionGroup(val permissions: Array<String>) {
             R.string.permission_camera
         )
 
-        object Location : BuiltIn(
+        object CoarseLocation : BuiltIn(
             arrayOf(
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ), R.string.permission_location
@@ -60,18 +62,19 @@ sealed class PermissionGroup(val permissions: Array<String>) {
             R.string.permission_phone
         )
 
-        object Sms : BuiltIn(
+        object ReadSms : BuiltIn(
             arrayOf(
                 Manifest.permission.READ_SMS,
             ), R.string.permission_sms
         )
 
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         object Notifications : BuiltIn(
             arrayOf(Manifest.permission.POST_NOTIFICATIONS),
             R.string.permission_notifications
         )
 
-        object Apps : BuiltIn(
+        object GetInstalledApps : BuiltIn(
             arrayOf(AppListPermissionUtils.GET_INSTALLED_APPS),
             R.string.permission_app_list
         )

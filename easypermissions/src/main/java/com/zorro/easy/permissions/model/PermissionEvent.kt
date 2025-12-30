@@ -5,5 +5,5 @@ package com.zorro.easy.permissions.model
  */
 sealed class PermissionEvent {
     data class AllGranted(val granted: List<String>) : PermissionEvent()
-    data class Partial(val granted: List<String>, val denied: List<String>) : PermissionEvent()
+    data class PartialGranted(val granted: List<String>, val denied: List<String>) : PermissionEvent()
 }

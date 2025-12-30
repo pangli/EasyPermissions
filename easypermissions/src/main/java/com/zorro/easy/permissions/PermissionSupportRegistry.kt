@@ -1,6 +1,7 @@
 package com.zorro.easy.permissions
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import com.zorro.easy.permissions.utils.AppListPermissionUtils
@@ -15,6 +16,7 @@ object PermissionSupportRegistry {
 
     init {
         // 默认规则
+        @SuppressLint("InlinedApi")
         checkerMap[Manifest.permission.POST_NOTIFICATIONS] = { Build.VERSION.SDK_INT >= 33 }
         checkerMap[AppListPermissionUtils.GET_INSTALLED_APPS] = { context ->
             AppListPermissionUtils.isSupportedReadAppListPermission(context)

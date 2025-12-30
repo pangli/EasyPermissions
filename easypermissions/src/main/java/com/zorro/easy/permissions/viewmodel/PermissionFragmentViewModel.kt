@@ -88,7 +88,7 @@ class PermissionFragmentViewModel(
                 // 部分授予（或部分永久拒绝，但不是全部都是永久拒绝），直接返回 Partial
                 sendEffect(
                     PermissionEffect.Completed(
-                        PermissionEvent.Partial(
+                        PermissionEvent.PartialGranted(
                             grantedList,
                             deniedList
                         )

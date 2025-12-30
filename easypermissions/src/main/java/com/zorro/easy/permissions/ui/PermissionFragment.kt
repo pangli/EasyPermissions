@@ -117,7 +117,7 @@ class PermissionHostFragment : Fragment() {
                                     )
                                 }
 
-                                is PermissionEvent.Partial -> Bundle().apply {
+                                is PermissionEvent.PartialGranted -> Bundle().apply {
                                     putBoolean(Constants.FRAGMENT_RESULT_GRANTED_STATE_KEY, false)
                                     putStringArrayList(
                                         Constants.FRAGMENT_RESULT_GRANTED_LIST_KEY,
@@ -178,9 +178,9 @@ class PermissionHostFragment : Fragment() {
                 it
             ) == PackageManager.PERMISSION_GRANTED
         }
-        val denied = allPerms - granted
+        val denied = allPerms - granted.toSet()
         vm.openedSettings(false)
-        vm.completedWith(PermissionEvent.Partial(granted, denied))
+        vm.completedWith(PermissionEvent.PartialGranted(granted, denied))
     }
 
     companion object {

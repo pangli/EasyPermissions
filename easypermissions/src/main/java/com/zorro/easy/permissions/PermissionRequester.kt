@@ -105,7 +105,7 @@ class PermissionRequester private constructor(
             bundle.getStringArrayList(Constants.FRAGMENT_RESULT_GRANTED_LIST_KEY) ?: arrayListOf()
         val denied =
             bundle.getStringArrayList(Constants.FRAGMENT_RESULT_DENIED_LIST_KEY) ?: arrayListOf()
-        return if (isGranted) PermissionEvent.AllGranted(granted) else PermissionEvent.Partial(
+        return if (isGranted) PermissionEvent.AllGranted(granted) else PermissionEvent.PartialGranted(
             granted,
             denied
         )
