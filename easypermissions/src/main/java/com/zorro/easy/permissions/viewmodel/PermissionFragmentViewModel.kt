@@ -70,6 +70,7 @@ class PermissionFragmentViewModel(
      * 权限申请结果
      */
     fun onActivityResult(
+        showSettingDialog: Boolean,
         grantedList: List<String>,
         deniedList: List<String>,
         permanentlyDenied: List<String>
@@ -78,12 +79,30 @@ class PermissionFragmentViewModel(
         if (deniedList.isEmpty()) {
             sendEffect(PermissionEffect.Completed(PermissionEvent.AllGranted(grantedList)))
         } else {
-            if (permanentlyDenied.isNotEmpty() && permanentlyDenied.size == deniedList.size) {
-                // 全部被永久拒绝
-                _permissionUiState.update {
-                    it.copy(permanentlyDenied = permanentlyDenied)
+            if (showSettingDialog) {
+                if (permanentlyDenied.isNotEmpty() && permanentlyDenied.size == deniedList.size) {
+                    // 全部被永久拒绝
+                    _permissionUiState.update {
+                        it.copy(permanentlyDenied = permanentlyDenied)
+                    }
+                    sendEffect(
+                        PermissionEffect.ShowSettingsDialog(
+                            grantedList,
+                            deniedList,
+                            permanentlyDenied
+                        )
+                    )
+                } else {
+                    // 部分授予（或部分永久拒绝，但不是全部都是永久拒绝），直接返回 Partial
+                    sendEffect(
+                        PermissionEffect.Completed(
+                            PermissionEvent.PartialGranted(
+                                grantedList,
+                                deniedList
+                            )
+                        )
+                    )
                 }
-                sendEffect(PermissionEffect.ShowSettingsDialog(permanentlyDenied))
             } else {
                 // 部分授予（或部分永久拒绝，但不是全部都是永久拒绝），直接返回 Partial
                 sendEffect(
@@ -95,6 +114,7 @@ class PermissionFragmentViewModel(
                     )
                 )
             }
+
         }
     }
 
@@ -114,16 +134,29 @@ class PermissionFragmentViewModel(
         if (_permissionUiState.value.waitingSettingsReturn) {
             val ctx = getApplication<Application>()
             val all = _permissionUiState.value.allPermissions
-            val stillDenied = all.filter {
-                ContextCompat.checkSelfPermission(ctx, it) != PackageManager.PERMISSION_GRANTED
+            val result = all.groupBy { permission ->
+                ContextCompat.checkSelfPermission(
+                    ctx,
+                    permission
+                ) == PackageManager.PERMISSION_GRANTED
             }
-            if (stillDenied.isEmpty()) {
+            // 已授予
+            val grantedPermissions = result[true] ?: emptyList()
+            // 未授予/已拒绝
+            val deniedPermissions = result[false] ?: emptyList()
+            if (deniedPermissions.isEmpty()) {
                 sendEffect(PermissionEffect.Completed(PermissionEvent.AllGranted(all)))
                 return
             }
             // if all still denied are permanently denied -> show dialog again
             // Note: fragment will compute shouldShow... because VM cannot call shouldShowRequestPermissionRationale
-            sendEffect(PermissionEffect.ShowSettingsDialog(stillDenied))
+            sendEffect(
+                PermissionEffect.ShowSettingsDialog(
+                    grantedPermissions,
+                    deniedPermissions,
+                    deniedPermissions
+                )
+            )
         }
     }
 

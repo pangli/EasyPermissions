@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
  *
  * 使用时通过 arguments 传入:
  * - Constants.FRAGMENT_ARG_REQUEST_KEY (String)
+ * - Constants.FRAGMENT_ARG_SHOW_SETTING_DIALOG (Boolean)
  * - Constants.FRAGMENT_ARG_PERMS (StringArray)
  *
  * Fragment 会向 caller 通过 FragmentResult 发送结果（使用 requestKey）。
@@ -39,6 +40,9 @@ class PermissionHostFragment : Fragment() {
 
     private val requestKey: String by lazy {
         arguments?.getString(Constants.FRAGMENT_ARG_REQUEST_KEY) ?: ""
+    }
+    private val showSettingDialog: Boolean by lazy {
+        arguments?.getBoolean(Constants.FRAGMENT_ARG_SHOW_SETTING_DIALOG, true) ?: true
     }
     private val allPerms: List<String> by lazy {
         arguments?.getStringArray(Constants.FRAGMENT_ARG_PERMS)?.toList().orEmpty()
@@ -56,7 +60,7 @@ class PermissionHostFragment : Fragment() {
                 // Note: On first request, shouldShowRequestPermissionRationale might be false; caller UX should handle explanations before.
                 !shouldShowRequestPermissionRationale(perm)
             }
-            vm.onActivityResult(granted, denied, permanentlyDenied)
+            vm.onActivityResult(showSettingDialog, granted, denied, permanentlyDenied)
         }
 
     @Suppress("DEPRECATION")
@@ -98,7 +102,7 @@ class PermissionHostFragment : Fragment() {
                             PermissionDeniedDialogFragment.show(
                                 parentFragmentManager,
                                 requestKey,
-                                eff.perms
+                                eff.permanentlyDenied
                             )
                         }
 
@@ -184,10 +188,15 @@ class PermissionHostFragment : Fragment() {
     }
 
     companion object {
-        fun newInstance(requestKey: String, perms: List<String>): PermissionHostFragment {
+        fun newInstance(
+            requestKey: String,
+            showSettingDialog: Boolean,
+            perms: List<String>
+        ): PermissionHostFragment {
             return PermissionHostFragment().apply {
                 arguments = Bundle().apply {
                     putString(Constants.FRAGMENT_ARG_REQUEST_KEY, requestKey)
+                    putBoolean(Constants.FRAGMENT_ARG_SHOW_SETTING_DIALOG, showSettingDialog)
                     putStringArray(Constants.FRAGMENT_ARG_PERMS, perms.toTypedArray())
                 }
             }

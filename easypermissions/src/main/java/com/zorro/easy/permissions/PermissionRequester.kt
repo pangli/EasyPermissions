@@ -26,6 +26,7 @@ class PermissionRequester private constructor(
     private val originalOrientation: Int
 ) {
     private val perms = linkedSetOf<String>()
+    private var showSettingDialog = true
 
     fun permissions(vararg groups: PermissionGroup) = apply {
         groups.forEach { group ->
@@ -43,6 +44,14 @@ class PermissionRequester private constructor(
                 perms.add(perm)
             }
         }
+    }
+
+    /**
+     * 权限永久拒绝时是否显示，跳转设置提示框
+     */
+    fun setShowSettingDialog(showSettingDialog: Boolean): PermissionRequester {
+        this.showSettingDialog = showSettingDialog
+        return this
     }
 
     /** callback 方式（DSL） */
@@ -115,7 +124,7 @@ class PermissionRequester private constructor(
         val tag = "${Constants.FRAGMENT_TAG_PREFIX}$requestKey"
         // ensure not duplicated
         if (fm.findFragmentByTag(tag) != null) return
-        val host = PermissionHostFragment.newInstance(requestKey, perms.toList())
+        val host = PermissionHostFragment.newInstance(requestKey, showSettingDialog, perms.toList())
         fm.beginTransaction().add(host, tag).commitAllowingStateLoss()
     }
 

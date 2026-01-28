@@ -114,6 +114,7 @@ class MainActivity : AppCompatActivity() {
                     PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
                     PermissionGroups.CAMERA, PermissionGroups.APPS
                 )
+                .setShowSettingDialog(false)
                 .asFlowByViewModel(vm)
         }
     }
@@ -126,7 +127,7 @@ class MainActivity : AppCompatActivity() {
         when (result) {
             is PermissionEvent.AllGranted -> {
                 vb.textView.text = "Granted\n${result.granted.joinToString("\n")}"
-                Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Success AllGranted", Toast.LENGTH_SHORT).show()
             }
 
             is PermissionEvent.PartialGranted -> {
@@ -134,7 +135,7 @@ class MainActivity : AppCompatActivity() {
                     "Granted\n${result.granted.joinToString("\n")}\nDenied\n${
                         result.denied.joinToString("\n")
                     }"
-                Toast.makeText(this, "Partial success", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Partial Granted", Toast.LENGTH_SHORT).show()
             }
         }
     }
