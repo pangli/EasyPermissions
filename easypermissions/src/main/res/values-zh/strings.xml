@@ -1,0 +1,15 @@
+<resources>
+    <string name="permission_camera">相机</string>
+    <string name="permission_location">位置</string>
+    <string name="permission_sms">短信</string>
+    <string name="permission_phone">电话</string>
+    <string name="permission_app_list">应用列表</string>
+    <string name="permission_notifications">通知</string>
+    <string name="permission_and">和</string>
+    <string name="permission_comma">、</string>
+    <!--Dialog-->
+    <string name="permission_denied_title">权限被禁用</string>
+    <string name="permission_denied_message">以下权限已被永久禁用，需要前往设置手动开启：%1$s权限</string>
+    <string name="permission_go_settings">去设置</string>
+    <string name="permission_cancel">取消</string>
+</resources>

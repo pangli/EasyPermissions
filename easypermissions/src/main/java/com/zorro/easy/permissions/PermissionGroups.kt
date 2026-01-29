@@ -23,7 +23,7 @@ object PermissionGroups {
     /**
      * 自定义权限组（可随时扩展）
      */
-    fun custom(
+    fun buildPermissionGroup(
         permissions: Array<String>,
         @StringRes labelRes: Int
     ): PermissionGroup.BuiltIn {
@@ -33,10 +33,10 @@ object PermissionGroups {
     /**
      * 自定义权限组（可随时扩展）
      */
-    fun custom(
+    fun buildPermissionGroup(
         permissions: Array<String>,
-        label: String
+        labelString: String
     ): PermissionGroup.Custom {
-        return PermissionGroup.Custom(permissions, label)
+        return PermissionGroup.Custom(permissions, labelString)
     }
 }
