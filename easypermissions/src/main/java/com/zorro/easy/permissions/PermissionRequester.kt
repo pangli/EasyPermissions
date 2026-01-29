@@ -38,10 +38,12 @@ class PermissionRequester private constructor(
         }
     }
 
-    fun permissions(vararg rawPerms: String) = apply {
-        rawPerms.forEach { perm ->
-            if (PermissionSupportRegistry.isSupported(context, perm)) {
-                perms.add(perm)
+    fun permissions(groups: List<PermissionGroup>) = apply {
+        groups.forEach { group ->
+            group.permissions.forEach { perm ->
+                if (PermissionSupportRegistry.isSupported(context, perm)) {
+                    perms.add(perm)
+                }
             }
         }
     }
@@ -121,16 +123,26 @@ class PermissionRequester private constructor(
     }
 
     private fun addHostFragment(requestKey: String) {
-        val tag = "${Constants.FRAGMENT_TAG_PREFIX}$requestKey"
-        // ensure not duplicated
-        if (fm.findFragmentByTag(tag) != null) return
-        val host = PermissionHostFragment.newInstance(requestKey, showSettingDialog, perms.toList())
-        fm.beginTransaction().add(host, tag).commitAllowingStateLoss()
+//        val tag = "${Constants.FRAGMENT_TAG_PREFIX}$requestKey"
+        val tag = Constants.FRAGMENT_TAG_PREFIX
+        var host = fm.findFragmentByTag(tag) as? PermissionHostFragment
+        if (host == null || host.isRemoving) {
+            host = PermissionHostFragment.newInstance()
+            fm.beginTransaction()
+                .add(host, tag)
+                .commitNowAllowingStateLoss() // 使用 AllowStateLoss 减少崩溃率
+        }
+        host.enqueueRequest(
+            requestKey = requestKey,
+            permissions = perms.toList(),
+            showSettingDialog = showSettingDialog
+        )
     }
 
     private val context = when (lifecycleOwner) {
         is FragmentActivity -> lifecycleOwner.applicationContext   // Activity 本身就是 Context
-        is Fragment -> lifecycleOwner.requireContext()  // Fragment 已 attach 时
+        is Fragment -> lifecycleOwner.context
+            ?: lifecycleOwner.requireActivity()  // Fragment 已 attach 时
         else -> throw IllegalArgumentException("Unsupported LifecycleOwner")
     }
 

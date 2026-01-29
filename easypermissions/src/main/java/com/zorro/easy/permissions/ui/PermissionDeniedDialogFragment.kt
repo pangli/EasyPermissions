@@ -22,31 +22,36 @@ class PermissionDeniedDialogFragment : DialogFragment() {
         arguments?.getStringArray(Constants.DIALOG_FRAGMENT_ARG_PERMS) ?: emptyArray()
     }
 
-//    @Suppress("DEPRECATION")
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        retainInstance = true
-//    }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        isCancelable = false
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val message = buildMessage(perms)
-        return MaterialAlertDialogBuilder(requireContext())
-            .setTitle(getString(R.string.permission_denied_title))
-            .setMessage(getString(R.string.permission_denied_message, message))
-            .setCancelable(false)
-            .setPositiveButton(getString(R.string.permission_go_settings)) { _, _ ->
-                setFragmentResult(
-                    "${Constants.DIALOG_FRAGMENT_REQUEST_KEY}$requestKey",
-                    bundleOf(Constants.DIALOG_FRAGMENT_RESULT_KEY to true)
-                )
-            }
-            .setNegativeButton(getString(R.string.permission_cancel)) { _, _ ->
-                setFragmentResult(
-                    "${Constants.DIALOG_FRAGMENT_REQUEST_KEY}$requestKey",
-                    bundleOf(Constants.DIALOG_FRAGMENT_RESULT_KEY to false)
-                )
-            }
-            .create()
+        val dialog =
+            MaterialAlertDialogBuilder(
+                requireContext(),
+                R.style.PermissionSettingAlertDialog
+            )
+                .setTitle(getString(R.string.permission_denied_title))
+                .setMessage(getString(R.string.permission_denied_message, message))
+                .setCancelable(false)
+                .setPositiveButton(getString(R.string.permission_go_settings)) { _, _ ->
+                    setFragmentResult(
+                        "${Constants.DIALOG_FRAGMENT_REQUEST_KEY}$requestKey",
+                        bundleOf(Constants.DIALOG_FRAGMENT_RESULT_KEY to true)
+                    )
+                }
+                .setNegativeButton(getString(R.string.permission_cancel)) { _, _ ->
+                    setFragmentResult(
+                        "${Constants.DIALOG_FRAGMENT_REQUEST_KEY}$requestKey",
+                        bundleOf(Constants.DIALOG_FRAGMENT_RESULT_KEY to false)
+                    )
+                }
+                .create()
+        dialog.setCanceledOnTouchOutside(false)
+        return dialog
     }
 
     private fun buildMessage(permissions: Array<String>): String {

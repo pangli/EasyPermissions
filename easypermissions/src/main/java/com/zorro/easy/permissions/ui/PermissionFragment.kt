@@ -38,15 +38,9 @@ class PermissionHostFragment : Fragment() {
 
     private val vm: PermissionFragmentViewModel by viewModels()
 
-    private val requestKey: String by lazy {
-        arguments?.getString(Constants.FRAGMENT_ARG_REQUEST_KEY) ?: ""
-    }
-    private val showSettingDialog: Boolean by lazy {
-        arguments?.getBoolean(Constants.FRAGMENT_ARG_SHOW_SETTING_DIALOG, true) ?: true
-    }
-    private val allPerms: List<String> by lazy {
-        arguments?.getStringArray(Constants.FRAGMENT_ARG_PERMS)?.toList().orEmpty()
-    }
+    private var requestKey: String = ""
+    private var showSettingDialog: Boolean = true
+    private var allPerms: List<String> = emptyList()
 
     // launcher 用于系统权限弹框阶段
     private val permissionLauncher =
@@ -69,11 +63,6 @@ class PermissionHostFragment : Fragment() {
         // keep no UI
         // retainInstance = false
         subscribeToVm()
-        // Start when fragment first created if state not started
-        if (savedInstanceState == null) {
-            // version filter
-            vm.start(requestKey, allPerms, allPerms)
-        }
     }
 
     private fun subscribeToVm() {
@@ -141,7 +130,7 @@ class PermissionHostFragment : Fragment() {
                             // remove self
                             parentFragmentManager.beginTransaction()
                                 .remove(this@PermissionHostFragment)
-                                .commitAllowingStateLoss()
+                                .commitNowAllowingStateLoss()
                         }
                     }
                 }
@@ -187,19 +176,18 @@ class PermissionHostFragment : Fragment() {
         vm.completedWith(PermissionEvent.PartialGranted(granted, denied))
     }
 
+    fun enqueueRequest(
+        requestKey: String,
+        permissions: List<String>,
+        showSettingDialog: Boolean
+    ) {
+        this.requestKey = requestKey
+        this.allPerms = permissions
+        this.showSettingDialog = showSettingDialog
+        vm.start(requestKey, allPerms, allPerms)
+    }
+
     companion object {
-        fun newInstance(
-            requestKey: String,
-            showSettingDialog: Boolean,
-            perms: List<String>
-        ): PermissionHostFragment {
-            return PermissionHostFragment().apply {
-                arguments = Bundle().apply {
-                    putString(Constants.FRAGMENT_ARG_REQUEST_KEY, requestKey)
-                    putBoolean(Constants.FRAGMENT_ARG_SHOW_SETTING_DIALOG, showSettingDialog)
-                    putStringArray(Constants.FRAGMENT_ARG_PERMS, perms.toTypedArray())
-                }
-            }
-        }
+        fun newInstance() = PermissionHostFragment()
     }
 }
