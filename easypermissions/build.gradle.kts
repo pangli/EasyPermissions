@@ -51,7 +51,7 @@ mavenPublishing {
 
     signAllPublications()
 
-    coordinates("io.github.pangli", "easy-permissions", "0.0.5")
+    coordinates("io.github.pangli", "easy-permissions", "0.0.6")
 
     pom {
         name = project.name

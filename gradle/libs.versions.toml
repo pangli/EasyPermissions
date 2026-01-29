@@ -13,7 +13,7 @@ fragmentKtx = "1.8.9"
 activityKtx = "1.11.0"
 mavenPublish = "0.35.0"
 dokka = "2.1.0"
-easyPermissions = "0.0.5"
+easyPermissions = "0.0.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

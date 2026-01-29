@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         //自定义权限组
-        val vendorSpecial = PermissionGroups.custom(
+        val vendorSpecial = PermissionGroups.buildPermissionGroup(
             arrayOf("com.vendor.permission.SPECIAL_FEATURE"),
             getString(R.string.test_label)
         )
@@ -48,30 +48,33 @@ class MainActivity : AppCompatActivity() {
         PermissionSupportRegistry.registerChecker("com.vendor.permission.SPECIAL_FEATURE") { _ ->
             Build.VERSION.SDK_INT >= 33
         }
+        val permissions = arrayOf(
+            PermissionGroups.PHONE, PermissionGroups.LOCATION,
+            PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
+            PermissionGroups.CAMERA, PermissionGroups.APPS,
+            vendorSpecial
+        )
         vb.buttonView.setOnClickListener {
             PermissionRequester.from(this)
-                .permissions(
-                    PermissionGroups.PHONE, PermissionGroups.LOCATION,
-                    PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
-                    PermissionGroups.CAMERA, PermissionGroups.APPS,
-                    vendorSpecial
-                ).request { result ->
+                .permissions(*permissions)
+                .request { result ->
                     handleResult(result)
                 }
         }
-        val vendorSpecial2 = PermissionGroups.custom(
+        val vendorSpecial2 = PermissionGroups.buildPermissionGroup(
             arrayOf("com.test.permission.TEST"),
             R.string.test_label
+        )
+        val permissions2 = arrayOf(
+            PermissionGroups.PHONE, PermissionGroups.LOCATION,
+            PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
+            PermissionGroups.CAMERA, PermissionGroups.APPS,
+            vendorSpecial2
         )
         vb.buttonAwait.setOnClickListener {
             lifecycleScope.launch {
                 val result = PermissionRequester.from(this@MainActivity)
-                    .permissions(
-                        PermissionGroups.PHONE, PermissionGroups.LOCATION,
-                        PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
-                        PermissionGroups.CAMERA, PermissionGroups.APPS,
-                        vendorSpecial2
-                    ).await()
+                    .permissions(*permissions2).await()
                 handleResult(result)
             }
         }
@@ -88,12 +91,14 @@ class MainActivity : AppCompatActivity() {
 //                        handleResult(it)
 //                    }
 //            }
+            val permissions3 = arrayOf(
+                PermissionGroups.PHONE, PermissionGroups.LOCATION,
+                PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
+                PermissionGroups.CAMERA, PermissionGroups.APPS
+            )
             PermissionRequester.from(this@MainActivity)
-                .permissions(
-                    PermissionGroups.PHONE, PermissionGroups.LOCATION,
-                    PermissionGroups.SMS, PermissionGroups.NOTIFICATIONS,
-                    PermissionGroups.CAMERA, PermissionGroups.APPS
-                ).asFlow()
+                .permissions(*permissions3)
+                .asFlow()
                 .onEach {
                     handleResult(it)
                 }

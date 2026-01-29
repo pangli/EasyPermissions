@@ -3,7 +3,7 @@
 :linkattrs:
 :project-group:   io.github.pangli
 :project-artifactId: easy-permissions
-:project-version: 0.0.5
+:project-version: 0.0.6
 
 image:https://img.shields.io/maven-central/v/{project-group}/{project-artifactId}?logo=apache%20maven[Download,link="https://search.maven.org/#search|ga|1|g:{project-group} AND a:{project-artifactId}"]
 
@@ -142,6 +142,14 @@ PermissionRequester.from(this@MainActivity)
         PermissionGroups.CAMERA, PermissionGroups.APPS
     )
     .asFlowByViewModel(vm)
+----
+
+=== 5) 权限拒绝时是否弹出跳转设置页弹窗（true:默认弹窗）
+
+[source,kotlin]
+----
+PermissionRequester.from(this@MainActivity)
+      .setShowSettingDialog(false)
 ----
 
 == 授权结果处理
